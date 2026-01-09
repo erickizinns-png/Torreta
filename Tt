@@ -1,0 +1,82 @@
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local workspace = game:GetService("Workspace")
+local player = Players.LocalPlayer
+
+local sentryTeleportConn = nil
+local sentryEquipConn = nil
+
+local UPDATE_INTERVAL = 0.3 -- chama a cada 0.3s, reduz lag
+local lastUpdate = 0
+
+local function toggleAutoDestroySentry(state)
+	if sentryTeleportConn then
+		sentryTeleportConn:Disconnect()
+		sentryTeleportConn = nil
+	end
+	if sentryEquipConn then
+		sentryEquipConn:Disconnect()
+		sentryEquipConn = nil
+	end
+
+	if state then
+		local function getSentries()
+			local sentries = {}
+			for _, obj in ipairs(workspace:GetDescendants()) do
+				if obj:IsA("Part") and obj.Name:lower():find("sentry") then
+					table.insert(sentries, obj)
+				end
+			end
+			return sentries
+		end
+
+		-- Teleporte otimizado
+		local function teleportSentries(dt)
+			lastUpdate = lastUpdate + dt
+			if lastUpdate < UPDATE_INTERVAL then return end
+			lastUpdate = 0
+
+			local char = player.Character
+			local hrp = char and char:FindFirstChild("HumanoidRootPart")
+			if not char or not hrp then return end
+
+			local sentries = getSentries()
+			for _, obj in ipairs(sentries) do
+				obj.CFrame = hrp.CFrame * CFrame.new(0, 0, -4)
+				obj.CanCollide = false
+			end
+		end
+
+		-- Equip Bat apenas se tiver Sentry
+		local function equipBat(dt)
+			lastUpdate = lastUpdate + dt
+			if lastUpdate < UPDATE_INTERVAL then return end
+			lastUpdate = 0
+
+			local char = player.Character
+			if not char then return end
+
+			local sentries = getSentries()
+			if #sentries == 0 then return end -- só equipa se existir Sentry
+
+			local backpack = player:FindFirstChild("Backpack")
+			if not backpack then return end
+
+			local tool = backpack:FindFirstChild("Bat") or char:FindFirstChild("Bat")
+			if tool then
+				if tool.Parent ~= char then
+					tool.Parent = char
+				end
+				pcall(function()
+					tool:Activate()
+				end)
+			end
+		end
+
+		sentryTeleportConn = RunService.Heartbeat:Connect(teleportSentries)
+		sentryEquipConn = RunService.Heartbeat:Connect(equipBat)
+	end
+end
+
+-- Executa automaticamente
+toggleAutoDestroySentry(true)
