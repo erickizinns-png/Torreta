@@ -1,3 +1,9 @@
+-- 7️⃣ AUTO DESTROY TORRET
+_G.WXV = _G.WXV or {}
+_G.WXV.AUTO_DESTROY_TORRET = _G.WXV.AUTO_DESTROY_TORRET or false
+if not _G.WXV.AUTO_DESTROY_TORRET then return end
+
+-- Código do AUTO DESTROY TORRET aqui
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local workspace = game:GetService("Workspace")
